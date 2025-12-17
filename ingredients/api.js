@@ -44,7 +44,21 @@ router.get("/search", async (req, res) => {
   // return all columns as well as the count of all rows as total_count
   // make sure to account for pagination and only return 5 rows at a time
 
-  res.status(501).json({ status: "not implemented", rows: [] });
+  let whereClause = "";
+
+  const params = [page * 5];
+
+  if (term) {
+    whereClause = "WHERE CONCAT(title, type) ILIKE $2";
+    params.push(term);
+  }
+
+  const { rows } = await pool.query(
+    `SELECT * FROM ingredients ${whereClause} OFFSET $1 LIMIT 5`,
+    params
+  );
+
+  res.status(200).json({ rows });
 });
 
 /**
