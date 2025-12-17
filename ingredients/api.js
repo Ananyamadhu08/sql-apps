@@ -54,7 +54,7 @@ router.get("/search", async (req, res) => {
   }
 
   const { rows } = await pool.query(
-    `SELECT * FROM ingredients ${whereClause} OFFSET $1 LIMIT 5`,
+    `SELECT *, COUNT(*) OVER ()::INT AS total_count FROM ingredients ${whereClause} OFFSET $1 LIMIT 5`,
     params
   );
 
