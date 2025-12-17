@@ -1,5 +1,6 @@
 const path = require("path");
 const express = require("express");
+const pg = require("pg");
 const router = express.Router();
 
 // client side static assets
@@ -14,13 +15,25 @@ router.get("/client.js", (_, res) =>
 
 // connect to postgres
 
+const pool = new pg.Pool({
+  user: "postgres",
+  host: "localhost",
+  database: "recipeguru",
+  password: "lol",
+  port: 5432,
+});
+
 router.get("/type", async (req, res) => {
   const { type } = req.query;
   console.log("get ingredients", type);
 
   // return all ingredients of a type
+  const { rows } = await pool.query(
+    "SELECT * FROM ingredients WHERE type = $1",
+    [type]
+  );
 
-  res.status(501).json({ status: "not implemented", rows: [] });
+  res.status(200).json({ rows });
 });
 
 router.get("/search", async (req, res) => {
