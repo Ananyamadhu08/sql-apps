@@ -72,7 +72,54 @@ router.get("/get", async (req, res) => {
   // return the body as body
   // if no row[0] has no photo, return it as default.jpg
 
-  res.status(501).json({ status: "not implemented" });
+  const ingredientsPromise = pool.query(
+    `
+    SELECT
+    i.title AS ingredient_title,
+    i.image AS ingredient_image,
+    i.type AS ingredient_type
+    FROM
+    recipe_ingredients ri
+
+    INNER JOIN
+    ingredients i
+
+    ON
+    i.id = ri.ingredient_id
+
+    WHERE ri.recipe_id = $1;
+    `,
+    [recipeId]
+  );
+
+  const photosPromise = pool.query(
+    `
+    SELECT
+    r.title,
+    r.body,
+    COALESCE(rp.url, 'default.jpg') AS url
+    FROM
+    recipes r
+    LEFT JOIN
+    recipes_photos rp
+    ON
+    rp.recipe_id = r.recipe_id
+    WHERE r.recipe_id = $1;
+    `,
+    [recipeId]
+  );
+
+  const [{ rows: photosRows }, { rows: ingredientRows }] = await Promise.all([
+    photosPromise,
+    ingredientsPromise,
+  ]);
+
+  res.status(200).json({
+    ingredients: ingredientRows,
+    photos: photosRows.map((photo) => photo.url),
+    title: photosRows[0].title,
+    body: photosRows[0].body,
+  });
 });
 /**
  * Student code ends here
